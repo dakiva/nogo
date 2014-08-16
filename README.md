@@ -19,7 +19,6 @@ To install, run:
    ```
    go get github.com/dakiva/nogo
    ```
-
 Getting Started
 ===============
 There are two types of access checks that nogo supports:
@@ -45,7 +44,6 @@ Nogo is straightforward to get going out of the box.
 * Create a RoleRepository instance. You may use the provided map backed repository, or roll out your own:
 * Instantiate an AccessControlStrategy backed by the RoleRepository created.
 * If you have the concept of a User/Principal in your system, adapt to the Principal interface and map your roles to your users accordingly.
-
 ```
        const (
           CoolPermission  nogo.Permission = "CoolPermission"
@@ -60,6 +58,7 @@ Nogo is straightforward to get going out of the box.
                ACStrategy := nogo.NewAccessControlStrategy(nil, roleRepository, true)
        }
   
+       // ....elsewhere in some service.....
        if err := AcStrategy.VerifyRoleAccess(principal, CoolPermission); err != nil {
              // Access denied!!
              // handle this
@@ -67,7 +66,6 @@ Nogo is straightforward to get going out of the box.
              // access granted... continue
        }
 ```
-
 Access Control Lists (ACLs)
 ==========================
 For in memory support for existing resources that already encapsulate specific access-related details (such as ownership, etc), adapt your resource to the SecureResource interface and return an ACL.
