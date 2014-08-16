@@ -3,6 +3,8 @@ nogo
 
 An authorization library for Go.
 
+[![wercker status](https://app.wercker.com/status/e8832169d39f8306d6ff136fc75da59a/m "wercker status")](https://app.wercker.com/project/bykey/e8832169d39f8306d6ff136fc75da59a)
+
 Overview
 ========
 Nogo provides easy to use role-based access controls for servers as well as access control lists (ACLs) support for defining access to resources.
@@ -14,8 +16,9 @@ Installation
 Make sure you have a working Go environment. The core library does not have any external dependencies. To run the unit tests, however, the [testify](https://github.com/stretchr/testify) library is required.
 
 To install, run:
-
+   '''
    go get github.com/dakiva/nogo
+   '''
 
 Getting Started
 ===============
@@ -43,6 +46,7 @@ Nogo is straightforward to get going out of the box.
 * Instantiate an AccessControlStrategy backed by the RoleRepository created.
 * If you have the concept of a User/Principal in your system, adapt to the Principal interface and map your roles to your users accordingly.
 
+'''
        const (
           CoolPermission  nogo.Permission = "CoolPermission"
        )
@@ -62,6 +66,7 @@ Nogo is straightforward to get going out of the box.
        } else {
              // access granted... continue
        }
+'''
 
 Access Control Lists (ACLs)
 ==========================
