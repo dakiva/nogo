@@ -59,11 +59,10 @@ CREATE TABLE acl_entry(
        id              bigserial PRIMARY KEY,
        acl_resource_id bigint NOT NULL,
        sid             bigint NOT NULL,
-       permission_id   bigint NOT NULL,
-       CONSTRAINT ix_acl_entry_acl_resource_id_sid_permission_id UNIQUE(acl_resource_id, sid, permission_id),
+       permission_mask int NOT NULL,
+       CONSTRAINT ix_acl_entry_acl_resource_id_sid_permission_id UNIQUE(acl_resource_id, sid),
        CONSTRAINT fk_acl_entry_acl_resource_id FOREIGN KEY(acl_resource_id) REFERENCES secure_resource(resource_id) ON DELETE CASCADE,
-       CONSTRAINT fk_acl_entry_sid FOREIGN KEY(sid) REFERENCES sid(sid_id),
-       CONSTRAINT fk_acl_entry_permission FOREIGN KEY(permission_id) REFERENCES permission(permission_id) ON DELETE CASCADE
+       CONSTRAINT fk_acl_entry_sid FOREIGN KEY(sid) REFERENCES sid(sid_id)
 );
 
 INSERT INTO permission (permission_name) VALUES
