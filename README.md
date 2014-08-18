@@ -29,8 +29,8 @@ There are two types of access checks that nogo supports:
 Concepts
 ========
 * Principal - A defined user of the system who may attempt to access specific system capabilities or resources.
-* Permission - A controlled system capability or mode of access when defined for resources.
-* Role - A named set of permissions used to grant a prinicipal access to a specific system capability or service.
+* Permission - A controlled system capability (or mode of access when defined for resources).
+* Role - A named set of permissions used to grant a prinicipal access to a specific system capability/service.
 * ACE - AccessControlEntry granting a principal a specific mode of access to a resource.
 * ACL - AccessControlList A list of entries granting principals permissions to a resource.
 * SecureResource - A resource whose access is controlled by an ACL. SecureResources may be nested allowing for access controls to be inherited when verifying access.
@@ -41,7 +41,7 @@ Nogo is straightforward to get going out of the box.
 
 * Create specific permissions that represent system level capabilities that you want controlled.
 * Define your roles.
-* Create a RoleRepository instance. You may use the provided map backed repository, or roll out your own:
+* Create a RoleRepository instance. You may use the provided map backed repository, or roll out your own repository.
 * Instantiate an AccessControlStrategy backed by the RoleRepository created.
 * If you have the concept of a User/Principal in your system, adapt to the Principal interface and map your roles to your users accordingly.
 ```
@@ -70,7 +70,7 @@ Access Control Lists (ACLs)
 ==========================
 For in memory support for existing resources that already encapsulate specific access-related details (such as ownership, etc), adapt your resource to the SecureResource interface and return an ACL.
 
-Most systems will likely need to implement the SecureResourceRepository, loading and returning SecureResources that contain ACLs from a database. Support for this is not here yet...For now, you will need to implement your own repository and provide an instance when constructing the AccessControlStrategy.
+Most systems, however, will likely need to persist ACLs and thus will need to implement the SecureResourceRepositoryfor loading and returning SecureResources from a database. Support for this is not here yet...For now, you will need to implement your own repository and provide an instance of the repository when constructing the AccessControlStrategy.
 
 Collaboration
 =============
@@ -80,6 +80,7 @@ This library is still really early in development and has not had a "locked" rel
   - Implement container level ACLs with support for inheriting access. SecureResources currently define a parent, but the access control resolution strategy does not take this into account when resolving access.
   - Provide out of the box repositories for RDBMS.
   - Support for groups. This is useful when managing ACLs. Currently principals must be added directly to ACLs.
+  - Support for resource ownership.
 
 About
 =====
