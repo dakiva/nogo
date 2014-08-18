@@ -81,10 +81,8 @@ Collaboration
 This library is still really early in development and has not had a "locked" release yet. This is a great time to provide suggestions, ideas. Pull requests are welcome.
 
 * TODO
-  - Implement container level ACLs with support for inheriting access. SecureResources currently define a parent, but the access control resolution strategy does not take this into account when resolving access.
   - Provide out of the box repositories for RDBMS.
   - Support for groups. This is useful when managing ACLs. Currently principals must be added directly to ACLs.
-  - Support for resource ownership.
 
 About
 =====
