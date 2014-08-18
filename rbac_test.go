@@ -21,21 +21,24 @@ import (
 )
 
 func TestRoleAuthorization(t *testing.T) {
-	role := NewRole("role", []Permission{Create})
+	create := Permission(1)
+	update := Permission(2)
+	role := NewRole("role", create)
 
-	ret, err := role.HasPermission(Update)
+	ret, err := role.HasPermission(update)
 	assert.False(t, ret)
 	assert.Nil(t, err)
 
-	ret, err = role.HasPermission(Create)
+	ret, err = role.HasPermission(create)
 	assert.True(t, ret)
 	assert.Nil(t, err)
 }
 
 func TestAdminAuthorization(t *testing.T) {
-	role := NewAdminRole("role", nil)
+	create := Permission(1)
+	role := NewAdminRole("role", EmptyPermissionMask)
 
-	ret, err := role.HasPermission(Create)
+	ret, err := role.HasPermission(create)
 	assert.False(t, ret)
 	assert.Nil(t, err)
 }

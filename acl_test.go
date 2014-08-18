@@ -21,23 +21,23 @@ import (
 )
 
 func TestAclAddACE(t *testing.T) {
-	ace := NewACE("id", Create)
-	ace2 := NewACE("id", Update)
+	create := Permission(1)
+	update := Permission(2)
+	ace := NewACE("id", create|update)
 	acl := NewACL()
 
 	acl.AddACE(ace)
-	acl.AddACE(ace2)
 
 	aces, err := acl.GetACEs()
-	assert.Equal(t, 2, len(aces))
-	assert.Equal(t, ace, aces[0])
-	assert.Equal(t, ace2, aces[1])
 	assert.Nil(t, err)
+	assert.Equal(t, 1, len(aces))
+	assert.Equal(t, ace, aces[0])
 }
 
 func TestAclAddDuplicateACE(t *testing.T) {
-	ace := NewACE("id", Create)
-	dupe := NewACE("id", Create)
+	create := Permission(1)
+	ace := NewACE("id", create)
+	dupe := NewACE("id", create)
 	acl := NewACL()
 
 	acl.AddACE(ace)
@@ -49,17 +49,15 @@ func TestAclAddDuplicateACE(t *testing.T) {
 }
 
 func TestValidRemoveACEs(t *testing.T) {
-	ace := NewACE("id", Create)
-	ace2 := NewACE("id", Update)
-	ace3 := NewACE("id2", Create)
+	create := Permission(1)
+	update := Permission(2)
+	ace := NewACE("id", create|update)
+	ace2 := NewACE("id2", create)
 	acl := NewACL()
 	acl.AddACE(ace)
 	acl.AddACE(ace2)
-	acl.AddACE(ace3)
 
 	err := acl.RemoveACE(ace)
-	assert.Nil(t, err)
-	err = acl.RemoveACE(ace3)
 	assert.Nil(t, err)
 
 	aces, _ := acl.GetACEs()
@@ -68,7 +66,8 @@ func TestValidRemoveACEs(t *testing.T) {
 }
 
 func TestRemoveNonExistentACE(t *testing.T) {
-	ace := NewACE("id", Create)
+	create := Permission(1)
+	ace := NewACE("id", create)
 	acl := NewACL()
 
 	err := acl.RemoveACE(ace)
@@ -77,37 +76,35 @@ func TestRemoveNonExistentACE(t *testing.T) {
 }
 
 func TestGetACEsForPrincipal(t *testing.T) {
-	ace := NewACE("id", Create)
-	ace2 := NewACE("id", Update)
-	ace3 := NewACE("id2", Create)
+	create := Permission(1)
+	update := Permission(2)
+	ace := NewACE("id", create|update)
+	ace2 := NewACE("id2", create)
 	acl := NewACL()
 
 	acl.AddACE(ace)
 	acl.AddACE(ace2)
-	acl.AddACE(ace3)
 
-	aces, err := acl.GetACEsForSid("id")
-	assert.Equal(t, 2, len(aces))
-	assert.Nil(t, err)
+	storedAce, _ := acl.GetACEForSid("id")
+	assert.Equal(t, ace, storedAce)
 
-	aces, err = acl.GetACEsForSid("id2")
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(aces))
+	storedAce, _ = acl.GetACEForSid("id2")
+	assert.Equal(t, ace2, storedAce)
 
-	aces, err = acl.GetACEsForSid("id3")
-	assert.NotNil(t, err)
+	storedAce, _ = acl.GetACEForSid("id3")
+	assert.Nil(t, storedAce)
 }
 
 func TestAuthorized(t *testing.T) {
-	ace := NewACE("id", Create)
-	acl := NewACL()
+	create := Permission(1)
+	update := Permission(2)
 
-	acl.AddACE(ace)
+	ace := NewACE("id", create)
 
-	isAuth, err := acl.HasPermission("id", Update)
+	isAuth, err := ace.HasPermission(update)
 	assert.False(t, isAuth)
 	assert.Nil(t, err)
-	isAuth, err = acl.HasPermission("id", Create)
+	isAuth, err = ace.HasPermission(create)
 	assert.True(t, isAuth)
 	assert.Nil(t, err)
 }

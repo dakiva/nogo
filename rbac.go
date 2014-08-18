@@ -15,7 +15,7 @@
 package nogo
 
 // Represents a specific capability defined by the system or mode of resource access that can be granted to Principals by way of Role assignment or resource ACLs.
-type Permission string
+type Permission int
 
 // Represents a user of the system. A principal simply has an ID and 0 or more roles. The principal's authorization is defined by the set of roles associated to the principal.
 type Principal interface {
@@ -33,39 +33,35 @@ type Role interface {
 	GetName() string
 	// Returns true if this Role is considered an administrator. Administrators are generally a unique case, in that they have access to everything in the system. For the majority of roles, the value returned should be false. This flag is useful when evaluating access to resources. Administrators often have full access to all resources.
 	IsAdmin() bool
-	// Returns true if the Role contains the following permission. If IsAdmin returns true, implementations may choose to simply bypass calling this function, allowing admins full access. Returns an error if an error occurs resolving the permission.
+	// Returns true if the Role contains the following permission. If IsAdmin returns true, implementations may choose to simply bypass calling this function, allowing admins full access. Returns an error if an error occurs while resolving the permission.
 	HasPermission(permission Permission) (bool, error)
 }
 
 // Creates a new role with a specific set of permissions
-func NewRole(name string, permissions []Permission) Role {
-	return &defaultRole{name: name, permissions: permissions, isAdmin: false}
+func NewRole(name string, mask Permission) Role {
+	return &defaultRole{name: name, permissionMask: mask, isAdmin: false}
 }
 
 // Creates a new admin role.
-func NewAdminRole(name string, permissions []Permission) Role {
-	return &defaultRole{name: name, permissions: permissions, isAdmin: true}
+func NewAdminRole(name string, mask Permission) Role {
+	return &defaultRole{name: name, permissionMask: mask, isAdmin: true}
 }
 
 type defaultRole struct {
-	name        string
-	permissions []Permission
-	isAdmin     bool
+	name           string
+	permissionMask Permission
+	isAdmin        bool
 }
 
-func (d *defaultRole) GetName() string {
-	return d.name
+func (this *defaultRole) GetName() string {
+	return this.name
 }
 
-func (d *defaultRole) IsAdmin() bool {
-	return d.isAdmin
+func (this *defaultRole) IsAdmin() bool {
+	return this.isAdmin
 }
 
-func (d *defaultRole) HasPermission(permission Permission) (bool, error) {
-	for _, v := range d.permissions {
-		if permission == v {
-			return true, nil
-		}
-	}
-	return false, nil
+func (this *defaultRole) HasPermission(permission Permission) (bool, error) {
+	val := (this.permissionMask&permission != 0)
+	return val, nil
 }

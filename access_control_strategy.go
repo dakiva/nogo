@@ -40,50 +40,59 @@ type defaultAccessControlStrategy struct {
 	allowFullAdminAccess bool
 }
 
-func (t *defaultAccessControlStrategy) VerifyRoleAccess(principal Principal, permission Permission) error {
-	roles, err := t.roleRepository.FindRoles(principal.GetRoleNames()...)
+func (this *defaultAccessControlStrategy) VerifyRoleAccess(principal Principal, permission Permission) error {
+	roles, err := this.roleRepository.FindRoles(principal.GetRoleNames()...)
 	if err != nil {
 		return errors.New("Could not verify role access.")
 	}
 	for _, role := range roles {
-		if t.allowFullAdminAccess && role.IsAdmin() {
+		if this.allowFullAdminAccess && role.IsAdmin() {
 			return nil
 		}
 		auth, err := role.HasPermission(permission)
 		if err != nil {
-			return errors.New(fmt.Sprintf("Principal %v does not have %v access", principal.GetId(), permission))
+			return errors.New(fmt.Sprintf("Principal %v does not have access", principal.GetId()))
 		}
 		if auth {
 			return nil
 		}
 	}
-	return errors.New(fmt.Sprintf("Principal %v does not have %v access", principal.GetId(), permission))
+	return errors.New(fmt.Sprintf("Principal %v does not have access", principal.GetId()))
 }
 
-func (t *defaultAccessControlStrategy) VerifyResourceAccess(principal Principal, permission Permission, resource SecureResource) error {
-	if t.allowFullAdminAccess && t.isAdmin(principal) {
+func (this *defaultAccessControlStrategy) VerifyResourceAccess(principal Principal, permission Permission, resource SecureResource) error {
+	owner := resource.GetOwnerSid()
+	if (owner != "" && owner == principal.GetSid()) || (this.allowFullAdminAccess && this.isAdmin(principal)) {
 		return nil
 	}
-	acl, err := resource.GetACL()
-	if err != nil {
+	if isAuth, err := hasPermission(principal.GetSid(), permission, resource); isAuth && err == nil {
+		return nil
+	} else if err != nil {
 		return err
 	}
-	if isAuth, err := acl.HasPermission(principal.GetSid(), permission); isAuth && err == nil {
-		return nil
+	parent := resource.GetParentResource()
+	for resource.InheritsParentACL() && parent != nil {
+		if isAuth, err := hasPermission(principal.GetSid(), permission, parent); isAuth && err == nil {
+			return nil
+		} else if err != nil {
+			return err
+		}
+		resource = parent
+		parent = resource.GetParentResource()
 	}
 	return errors.New(fmt.Sprintf("Principal %v does not have access to the resource %v.", principal.GetId(), resource.GetNativeId()))
 }
 
-func (t *defaultAccessControlStrategy) VerifyResourceAccessById(principal Principal, permission Permission, resourceId string) error {
-	resource, err := t.resourceRepository.FindResource(resourceId)
+func (this *defaultAccessControlStrategy) VerifyResourceAccessById(principal Principal, permission Permission, resourceId string) error {
+	resource, err := this.resourceRepository.FindResource(resourceId)
 	if err != nil {
 		return err
 	}
-	return t.VerifyResourceAccess(principal, permission, resource)
+	return this.VerifyResourceAccess(principal, permission, resource)
 }
 
-func (t *defaultAccessControlStrategy) isAdmin(principal Principal) bool {
-	roles, err := t.roleRepository.FindRoles(principal.GetRoleNames()...)
+func (this *defaultAccessControlStrategy) isAdmin(principal Principal) bool {
+	roles, err := this.roleRepository.FindRoles(principal.GetRoleNames()...)
 	if err == nil {
 		for _, role := range roles {
 			if role.IsAdmin() {
@@ -92,4 +101,23 @@ func (t *defaultAccessControlStrategy) isAdmin(principal Principal) bool {
 		}
 	}
 	return false
+}
+
+func hasPermission(sid string, permission Permission, resource SecureResource) (bool, error) {
+	acl, err := resource.GetACL()
+	if err != nil {
+		return false, err
+	}
+	ace, err := acl.GetACEForSid(sid)
+	if err != nil {
+		return false, err
+	}
+	if ace != nil {
+		if isAuth, err := ace.HasPermission(permission); isAuth && err == nil {
+			return true, nil
+		} else if err != nil {
+			return false, err
+		}
+	}
+	return false, nil
 }
