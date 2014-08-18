@@ -51,13 +51,13 @@ func (t *defaultAccessControlStrategy) VerifyRoleAccess(principal Principal, per
 		}
 		auth, err := role.HasPermission(permission)
 		if err != nil {
-			return errors.New(fmt.Sprintf("Principal %v does not have %v access", principal.GetId(), permission))
+			return errors.New(fmt.Sprintf("Principal %v does not have access", principal.GetId()))
 		}
 		if auth {
 			return nil
 		}
 	}
-	return errors.New(fmt.Sprintf("Principal %v does not have %v access", principal.GetId(), permission))
+	return errors.New(fmt.Sprintf("Principal %v does not have access", principal.GetId()))
 }
 
 func (t *defaultAccessControlStrategy) VerifyResourceAccess(principal Principal, permission Permission, resource SecureResource) error {

@@ -15,7 +15,7 @@
 package nogo
 
 // Represents a specific capability defined by the system or mode of resource access that can be granted to Principals by way of Role assignment or resource ACLs.
-type Permission string
+type Permission int
 
 // Represents a user of the system. A principal simply has an ID and 0 or more roles. The principal's authorization is defined by the set of roles associated to the principal.
 type Principal interface {
@@ -38,34 +38,30 @@ type Role interface {
 }
 
 // Creates a new role with a specific set of permissions
-func NewRole(name string, permissions []Permission) Role {
-	return &defaultRole{name: name, permissions: permissions, isAdmin: false}
+func NewRole(name string, mask Permission) Role {
+	return &defaultRole{name: name, permissionMask: mask, isAdmin: false}
 }
 
 // Creates a new admin role.
-func NewAdminRole(name string, permissions []Permission) Role {
-	return &defaultRole{name: name, permissions: permissions, isAdmin: true}
+func NewAdminRole(name string, mask Permission) Role {
+	return &defaultRole{name: name, permissionMask: mask, isAdmin: true}
 }
 
 type defaultRole struct {
-	name        string
-	permissions []Permission
-	isAdmin     bool
+	name           string
+	permissionMask Permission
+	isAdmin        bool
 }
 
-func (d *defaultRole) GetName() string {
-	return d.name
+func (this *defaultRole) GetName() string {
+	return this.name
 }
 
-func (d *defaultRole) IsAdmin() bool {
-	return d.isAdmin
+func (this *defaultRole) IsAdmin() bool {
+	return this.isAdmin
 }
 
-func (d *defaultRole) HasPermission(permission Permission) (bool, error) {
-	for _, v := range d.permissions {
-		if permission == v {
-			return true, nil
-		}
-	}
-	return false, nil
+func (this *defaultRole) HasPermission(permission Permission) (bool, error) {
+	val := (this.permissionMask&permission != 0)
+	return val, nil
 }

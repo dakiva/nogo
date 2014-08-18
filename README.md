@@ -24,7 +24,7 @@ Getting Started
 There are two types of access checks that nogo supports:
 
 * Role based access - Providing authorization controls over system capabilities (often restricts functionality in the service tier).
-* Access Control lists - Provides authorization controls over system resources. There is out of the box support for common modes of access: Create, Read, Update, Delete. Extending this can be done easily.
+* Access Control lists - Provides authorization controls over system resources.
 
 Concepts
 ========
@@ -46,12 +46,16 @@ Nogo is straightforward to get going out of the box.
 * If you have the concept of a User/Principal in your system, adapt to the Principal interface and map your roles to your users accordingly.
 ```
        const (
-          CoolPermission  nogo.Permission = "CoolPermission"
+          Create = 1 << iota
+          Read
+          Update
+          Delete
+          CoolPermission
        )
        
        var ACStrategy nogo.AccessControlStrategy
        func init() {
-               var userRole = nogo.NewRole("User", []nogo.Permission{ CoolPermission }
+               var userRole = nogo.NewRole("User", CoolPermission)
                roleRepository := nogo.NewMapBackedRepository()
                roleRepository.CreateRole(userRole)
                // pass true to allow admin roles full access to the system
@@ -70,7 +74,7 @@ Access Control Lists (ACLs)
 ==========================
 For in memory support for existing resources that already encapsulate specific access-related details (such as ownership, etc), adapt your resource to the SecureResource interface and return an ACL.
 
-Most systems, however, will likely need to persist ACLs and thus will need to implement the SecureResourceRepositoryfor loading and returning SecureResources from a database. Support for this is not here yet...For now, you will need to implement your own repository and provide an instance of the repository when constructing the AccessControlStrategy.
+Most systems, however, will likely need to persist ACLs and thus will need to implement the SecureResourceRepository for loading and returning SecureResources from a database. Support for this is not here yet...For now, you will need to implement your own repository and provide an instance of the repository when constructing the AccessControlStrategy.
 
 Collaboration
 =============

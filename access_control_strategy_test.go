@@ -22,22 +22,25 @@ import (
 )
 
 func TestVerifyRoleAccess(t *testing.T) {
-	r := NewRole("testRole", []Permission{Create})
+	create := Permission(1)
+	update := Permission(2)
+	r := NewRole("testRole", create)
 	mockRoleRepo := new(mockRoleRepository)
 	mockRoleRepo.On("FindRoles", []string{"testRole"}).Return([]Role{r}, nil)
 
 	p := &mockPrincipal{roleNames: []string{"testRole"}}
 	aclService := NewAccessControlStrategy(nil, mockRoleRepo, true)
 
-	err := aclService.VerifyRoleAccess(p, Update)
+	err := aclService.VerifyRoleAccess(p, update)
 	assert.NotNil(t, err)
 
-	err = aclService.VerifyRoleAccess(p, Create)
+	err = aclService.VerifyRoleAccess(p, create)
 	assert.Nil(t, err)
 }
 
 func TestVerifyAdminRoleAccess(t *testing.T) {
-	r := NewAdminRole("testAdminRole", []Permission{})
+	update := Permission(2)
+	r := NewAdminRole("testAdminRole", EmptyPermissionMask)
 	mockRoleRepo := new(mockRoleRepository)
 	mockRoleRepo.On("FindRoles", []string{"testAdminRole"}).Return([]Role{r}, nil)
 
@@ -45,35 +48,38 @@ func TestVerifyAdminRoleAccess(t *testing.T) {
 
 	// verify with allowAdmin on
 	aclService := NewAccessControlStrategy(nil, mockRoleRepo, true)
-	err := aclService.VerifyRoleAccess(p, Update)
+	err := aclService.VerifyRoleAccess(p, update)
 	assert.Nil(t, err)
 
 	// verify with allowAdmin off
 	aclService = NewAccessControlStrategy(nil, mockRoleRepo, false)
-	err = aclService.VerifyRoleAccess(p, Update)
+	err = aclService.VerifyRoleAccess(p, update)
 	assert.NotNil(t, err)
 }
 
 func TestVerifyResourceACL(t *testing.T) {
+	create := Permission(1)
+	update := Permission(2)
 	p := &mockPrincipal{sid: "id", roleNames: []string{}}
 	acl := NewACL()
-	acl.AddACE(NewACE("id", Create))
+	acl.AddACE(NewACE("id", create))
 	resource := &mockResource{nativeId: "id", acl: acl}
 	mockRoleRepo := new(mockRoleRepository)
 	mockRoleRepo.On("FindRoles", []string{}).Return([]Role{}, nil)
 	aclService := NewAccessControlStrategy(nil, mockRoleRepo, true)
 
-	err := aclService.VerifyResourceAccess(p, Update, resource)
+	err := aclService.VerifyResourceAccess(p, update, resource)
 	assert.NotNil(t, err)
 
-	err = aclService.VerifyResourceAccess(p, Create, resource)
+	err = aclService.VerifyResourceAccess(p, create, resource)
 	assert.Nil(t, err)
 
 	mockRoleRepo.AssertExpectations(t)
 }
 
 func TestVerifyAdminResourceAccess(t *testing.T) {
-	r := NewAdminRole("testAdminRole", []Permission{})
+	create := Permission(1)
+	r := NewAdminRole("testAdminRole", EmptyPermissionMask)
 	p := &mockPrincipal{sid: "id", roleNames: []string{"testAdminRole"}}
 	resource := &mockResource{nativeId: "id", acl: NewACL()}
 	mockRoleRepo := new(mockRoleRepository)
@@ -81,12 +87,12 @@ func TestVerifyAdminResourceAccess(t *testing.T) {
 
 	// verify with allowAdmin on
 	aclService := NewAccessControlStrategy(nil, mockRoleRepo, true)
-	err := aclService.VerifyResourceAccess(p, Create, resource)
+	err := aclService.VerifyResourceAccess(p, create, resource)
 	assert.Nil(t, err)
 
 	// verify with allowAdmin off
 	aclService = NewAccessControlStrategy(nil, mockRoleRepo, false)
-	err = aclService.VerifyResourceAccess(p, Create, resource)
+	err = aclService.VerifyResourceAccess(p, create, resource)
 	assert.NotNil(t, err)
 }
 

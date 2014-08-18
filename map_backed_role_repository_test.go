@@ -21,7 +21,8 @@ import (
 )
 
 func CreateRoleTest(t *testing.T) {
-	r := NewRole("testRole", []Permission{Create})
+	create := Permission(1)
+	r := NewRole("testRole", create)
 	repo := NewMapBackedRepository()
 
 	err := repo.CreateRole(r)
@@ -30,8 +31,10 @@ func CreateRoleTest(t *testing.T) {
 }
 
 func CreateDuplicateRole(t *testing.T) {
-	r := NewRole("testRole", []Permission{Create})
-	r2 := NewRole("testRole", []Permission{Update})
+	create := Permission(1)
+	update := Permission(2)
+	r := NewRole("testRole", create)
+	r2 := NewRole("testRole", update)
 	repo := NewMapBackedRepository()
 
 	err := repo.CreateRole(r)
@@ -48,8 +51,10 @@ func FindNonexistantRolesTest(t *testing.T) {
 }
 
 func FindRolesTest(t *testing.T) {
-	r := NewRole("testRole", []Permission{Create})
-	r2 := NewRole("testRole2", []Permission{Update})
+	create := Permission(1)
+	update := Permission(2)
+	r := NewRole("testRole", create)
+	r2 := NewRole("testRole2", update)
 	repo := NewMapBackedRepository()
 	repo.CreateRole(r)
 	repo.CreateRole(r2)
@@ -59,29 +64,32 @@ func FindRolesTest(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(roles))
 	assert.Equal(t, "testRole", roles[0].GetName())
-	hasPermission, err := roles[0].HasPermission(Create)
+	hasPermission, err := roles[0].HasPermission(create)
 	assert.True(t, hasPermission)
 	assert.Equal(t, "testRole2", roles[1].GetName())
-	hasPermission, err = roles[0].HasPermission(Update)
+	hasPermission, err = roles[0].HasPermission(update)
 	assert.True(t, hasPermission)
 }
 
 func UpdateRoleTest(t *testing.T) {
-	r := NewRole("testRole", []Permission{Create})
+	create := Permission(1)
+	update := Permission(2)
+	r := NewRole("testRole", create)
 	repo := NewMapBackedRepository()
 	repo.CreateRole(r)
 
-	r = NewRole("testRole", []Permission{Update})
+	r = NewRole("testRole", update)
 	err := repo.UpdateRole(r)
 
 	assert.Nil(t, err)
 	roles, _ := repo.FindRoles("testRole")
-	hasPermission, err := roles[0].HasPermission(Update)
+	hasPermission, err := roles[0].HasPermission(update)
 	assert.True(t, hasPermission)
 }
 
 func UpdateNonExistantRoleTest(t *testing.T) {
-	r := NewRole("testRole", []Permission{Create})
+	create := Permission(1)
+	r := NewRole("testRole", create)
 	repo := NewMapBackedRepository()
 
 	err := repo.UpdateRole(r)
@@ -90,11 +98,12 @@ func UpdateNonExistantRoleTest(t *testing.T) {
 }
 
 func DeleteRoleTest(t *testing.T) {
-	r := NewRole("testRole", []Permission{Create})
+	create := Permission(1)
+	r := NewRole("testRole", create)
 	repo := NewMapBackedRepository()
 	repo.CreateRole(r)
 
-	err := repo.DeleteRole("testRole")
+	err := repo.DeleteRole("testrole")
 
 	assert.Nil(t, err)
 	_, err = repo.FindRoles("testRole")
