@@ -43,7 +43,6 @@ func TestVerifyAdminRoleAccess(t *testing.T) {
 	r := NewAdminRole("testAdminRole", EmptyPermissionMask)
 	mockRoleRepo := new(mockRoleRepository)
 	mockRoleRepo.On("FindRoles", []string{"testAdminRole"}).Return([]Role{r}, nil)
-
 	p := &mockPrincipal{roleNames: []string{"testAdminRole"}}
 
 	// verify with allowAdmin on
@@ -74,7 +73,34 @@ func TestVerifyResourceACL(t *testing.T) {
 	err = aclService.VerifyResourceAccess(p, create, resource)
 	assert.Nil(t, err)
 
+	// role repo should not be interacted with when verifying ACLs for non-admins
 	mockRoleRepo.AssertExpectations(t)
+}
+
+func TestVerifyInheritedResourceACL(t *testing.T) {
+	create := Permission(1)
+	update := Permission(2)
+	p := &mockPrincipal{sid: "id", roleNames: []string{}}
+
+	parentACL := NewACL()
+	parentACL.AddACE(NewACE("id", update))
+	parentResource := &mockResource{nativeId: "parentId", acl: parentACL}
+	acl := NewACL()
+	acl.AddACE(NewACE("id", create))
+	resource := &mockResource{nativeId: "id", acl: acl, parent: parentResource}
+	aclService := NewAccessControlStrategy(nil, nil, false)
+
+	// verify with inherit off
+	err := aclService.VerifyResourceAccess(p, update, resource)
+	assert.NotNil(t, err)
+
+	// verify with inherit on
+	resource.inheritACL = true
+	err = aclService.VerifyResourceAccess(p, update, resource)
+	assert.Nil(t, err)
+
+	err = aclService.VerifyResourceAccess(p, create, resource)
+	assert.Nil(t, err)
 }
 
 func TestVerifyAdminResourceAccess(t *testing.T) {
@@ -103,35 +129,45 @@ type mockPrincipal struct {
 	roleNames []string
 }
 
-func (m *mockPrincipal) GetId() string {
-	return m.id
+func (this *mockPrincipal) GetId() string {
+	return this.id
 }
 
-func (m *mockPrincipal) GetSid() string {
-	return m.sid
+func (this *mockPrincipal) GetSid() string {
+	return this.sid
 }
 
-func (m *mockPrincipal) GetRoleNames() []string {
-	return m.roleNames
+func (this *mockPrincipal) GetRoleNames() []string {
+	return this.roleNames
 }
 
 // mock resource
 type mockResource struct {
-	nativeId string
-	acl      ACL
-	parent   SecureResource
+	nativeId   string
+	acl        ACL
+	parent     SecureResource
+	owner      string
+	inheritACL bool
 }
 
-func (m *mockResource) GetNativeId() string {
-	return m.nativeId
+func (this *mockResource) GetNativeId() string {
+	return this.nativeId
 }
 
-func (m *mockResource) GetACL() (ACL, error) {
-	return m.acl, nil
+func (this *mockResource) GetACL() (ACL, error) {
+	return this.acl, nil
 }
 
-func (m *mockResource) GetParentResource() SecureResource {
-	return m.parent
+func (this *mockResource) GetParentResource() SecureResource {
+	return this.parent
+}
+
+func (this *mockResource) GetOwnerSid() string {
+	return this.owner
+}
+
+func (this *mockResource) InheritsParentACL() bool {
+	return this.inheritACL
 }
 
 // mock role repository
@@ -139,23 +175,23 @@ type mockRoleRepository struct {
 	mock.Mock
 }
 
-func (m *mockRoleRepository) FindRoles(roleNames ...string) ([]Role, error) {
-	args := m.Mock.Called(roleNames)
+func (this *mockRoleRepository) FindRoles(roleNames ...string) ([]Role, error) {
+	args := this.Mock.Called(roleNames)
 	return args.Get(0).([]Role), args.Error(1)
 }
 
-func (m *mockRoleRepository) CreateRole(role Role) error {
-	args := m.Mock.Called(role)
+func (this *mockRoleRepository) CreateRole(role Role) error {
+	args := this.Mock.Called(role)
 	return args.Error(0)
 }
 
-func (m *mockRoleRepository) UpdateRole(role Role) error {
-	args := m.Mock.Called(role)
+func (this *mockRoleRepository) UpdateRole(role Role) error {
+	args := this.Mock.Called(role)
 	return args.Error(0)
 }
 
-func (m *mockRoleRepository) DeleteRole(roleName string) error {
-	args := m.Mock.Called(roleName)
+func (this *mockRoleRepository) DeleteRole(roleName string) error {
+	args := this.Mock.Called(roleName)
 	return args.Error(0)
 }
 
@@ -164,22 +200,22 @@ type mockSecureResourceRepository struct {
 	mock.Mock
 }
 
-func (m *mockSecureResourceRepository) FindResource(nativeResourceId string) (SecureResource, error) {
-	args := m.Mock.Called(nativeResourceId)
+func (this *mockSecureResourceRepository) FindResource(nativeResourceId string) (SecureResource, error) {
+	args := this.Mock.Called(nativeResourceId)
 	return args.Get(0).(SecureResource), args.Error(1)
 }
 
-func (m *mockSecureResourceRepository) CreateResource(resource SecureResource) error {
-	args := m.Mock.Called(resource)
+func (this *mockSecureResourceRepository) CreateResource(resource SecureResource) error {
+	args := this.Mock.Called(resource)
 	return args.Error(0)
 }
 
-func (m *mockSecureResourceRepository) UpdateResource(resource SecureResource) error {
-	args := m.Mock.Called(resource)
+func (this *mockSecureResourceRepository) UpdateResource(resource SecureResource) error {
+	args := this.Mock.Called(resource)
 	return args.Error(0)
 }
 
-func (m *mockSecureResourceRepository) DeleteResource(nativeResourceId string) error {
-	args := m.Mock.Called(nativeResourceId)
+func (this *mockSecureResourceRepository) DeleteResource(nativeResourceId string) error {
+	args := this.Mock.Called(nativeResourceId)
 	return args.Error(0)
 }

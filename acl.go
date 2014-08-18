@@ -33,17 +33,15 @@ type ACL interface {
 	RemoveACE(ace ACE) error
 	// Returns an access control entry associated with the sid. May return an empty value. Returns an error if the principal could not be looked up.
 	GetACEForSid(sid string) (ACE, error)
-	// Returns true if the sid is authorized to perform the specific mode of access defined by the permission. Returns an error if the authorization check could not be performed.
-	HasPermission(sid string, permission Permission) (bool, error)
 }
 
 // An access control entry definition that can be referenced in resource ACLs.
 type ACE interface {
 	// Returns the SID of the principal that is granted access. Must not return an empty value.
 	GetSid() string
-	// Returns the permissions. Must not return an empty list.
+	// Returns the permissions. Must not return an empty array.
 	GetPermissions() []Permission
-	// Returns true if the ACE contains the permission. Returns an error if the authorization check could not be performed.
+	// Returns true if the ACE contains the permission. Returns an error if the permission check could not be performed.
 	HasPermission(permission Permission) (bool, error)
 }
 
@@ -53,8 +51,12 @@ type SecureResource interface {
 	GetNativeId() string
 	// returns the acl for the resource. Must not return an empty value. Returns an error if the acl could not be retrieved.
 	GetACL() (ACL, error)
-	// returns the parent resource. May return nil if the resource does not have a parent.
+	// Returns the parent resource. May return nil if the resource does not have a parent.
 	GetParentResource() SecureResource
+	// Returns the sid of the principal who owns this resource.
+	GetOwnerSid() string
+	// Returns true if this resource inherits the ACL from its parent.
+	InheritsParentACL() bool
 }
 
 // Creates a new access control list
@@ -95,13 +97,6 @@ func (this *defaultACL) GetACEForSid(sid string) (ACE, error) {
 		return entry, nil
 	}
 	return nil, nil
-}
-
-func (this *defaultACL) HasPermission(sid string, permission Permission) (bool, error) {
-	if entry, ok := this.aces[sid]; ok {
-		return entry.HasPermission(permission)
-	}
-	return false, nil
 }
 
 // Creates a control entry for the sid and set of permissions

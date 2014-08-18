@@ -100,14 +100,11 @@ func TestAuthorized(t *testing.T) {
 	update := Permission(2)
 
 	ace := NewACE("id", create)
-	acl := NewACL()
 
-	acl.AddACE(ace)
-
-	isAuth, err := acl.HasPermission("id", update)
+	isAuth, err := ace.HasPermission(update)
 	assert.False(t, isAuth)
 	assert.Nil(t, err)
-	isAuth, err = acl.HasPermission("id", create)
+	isAuth, err = ace.HasPermission(create)
 	assert.True(t, isAuth)
 	assert.Nil(t, err)
 }

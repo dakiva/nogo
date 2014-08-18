@@ -33,7 +33,7 @@ type Role interface {
 	GetName() string
 	// Returns true if this Role is considered an administrator. Administrators are generally a unique case, in that they have access to everything in the system. For the majority of roles, the value returned should be false. This flag is useful when evaluating access to resources. Administrators often have full access to all resources.
 	IsAdmin() bool
-	// Returns true if the Role contains the following permission. If IsAdmin returns true, implementations may choose to simply bypass calling this function, allowing admins full access. Returns an error if an error occurs resolving the permission.
+	// Returns true if the Role contains the following permission. If IsAdmin returns true, implementations may choose to simply bypass calling this function, allowing admins full access. Returns an error if an error occurs while resolving the permission.
 	HasPermission(permission Permission) (bool, error)
 }
 
