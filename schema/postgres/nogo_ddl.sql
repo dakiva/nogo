@@ -1,26 +1,18 @@
 CREATE TABLE role (
-       role_id    bigserial PRIMARY KEY,
-       role_name  text UNIQUE NOT NULL
+       role_id          bigserial PRIMARY KEY,
+       role_name        text UNIQUE NOT NULL,
+       permission_mask  int NOT NULL
 );
 
-CREATE TABLE permission (
-       permission_id    bigserial PRIMARY KEY,
-       permission_name  text UNIQUE NOT NULL
+CREATE TABLE role_members (
+       role_id            bigint NOT NULL,
+       principal_sid      text NOT NULL,
+       CONSTRAINT pk__role_members PRIMARY KEY(role_id, principal_sid),
+       CONSTRAINT fk_role_members_role_id FOREIGN KEY(role_id) REFERENCES role(role_id) ON DELETE CASCADE
 );
 
-CREATE TABLE role_permission (
-       role_id               bigint NOT NULL,
-       permission_id         bigint NOT NULL,
-       CONSTRAINT pk_role_permission PRIMARY KEY(role_id, permission_id),
-       CONSTRAINT fk_role_permission_role_id FOREIGN KEY(role_id) REFERENCES role(role_id) ON DELETE CASCADE,
-       CONSTRAINT fk_role_permission_permission_id FOREIGN KEY(permission_id) REFERENCES permission(permission_id) ON DELETE CASCADE
-);
-
-CREATE TABLE principal_role (
-       principal_id         text NOT NULL,
-       role_id              bigint NOT NULL,
-       CONSTRAINT pk_principal_role PRIMARY KEY(principal_id, role_id),
-       CONSTRAINT fk_principal_role_role_id FOREIGN KEY(role_id) REFERENCES role(role_id) ON DELETE CASCADE
+CREATE INDEX ix_role_members_principal_sid ON role_members (
+       principal_sid
 );
 
 CREATE TABLE groups (
@@ -28,15 +20,15 @@ CREATE TABLE groups (
        group_name   text UNIQUE NOT NULL
 );
 
-CREATE TABLE principal_groups (
-       principal_id           text NOT NULL,
-       group_id               bigint NOT NULL,
-       CONSTRAINT pk_principal_groups PRIMARY KEY(principal_id, group_id),
-       CONSTRAINT fk_principal_groups_group_id FOREIGN KEY(group_id) REFERENCES groups(group_id) ON DELETE CASCADE
+CREATE TABLE group_members (
+       group_id            bigint NOT NULL,
+       principal_sid       text NOT NULL,
+       CONSTRAINT pk_group_members PRIMARY KEY(group_id, principal_sid),
+       CONSTRAINT fk_group_members_group_id FOREIGN KEY(group_id) REFERENCES groups(group_id) ON DELETE CASCADE
 );
 
-CREATE INDEX ix_principal_groups_group_id ON principal_groups (
-       group_id
+CREATE INDEX ix_group_members_principal_sid ON group_members (
+       principal_sid
 );
 
 CREATE TABLE sid (
@@ -60,11 +52,7 @@ CREATE TABLE acl_entry(
        acl_resource_id bigint NOT NULL,
        sid             bigint NOT NULL,
        permission_mask int NOT NULL,
-       CONSTRAINT ix_acl_entry_acl_resource_id_sid_permission_id UNIQUE(acl_resource_id, sid),
+       CONSTRAINT ix_acl_entry_acl_resource_id_sid UNIQUE(acl_resource_id, sid),
        CONSTRAINT fk_acl_entry_acl_resource_id FOREIGN KEY(acl_resource_id) REFERENCES secure_resource(resource_id) ON DELETE CASCADE,
        CONSTRAINT fk_acl_entry_sid FOREIGN KEY(sid) REFERENCES sid(sid_id)
 );
-
-INSERT INTO permission (permission_name) VALUES
-   ('Create'), ('Read'), ('Update'), ('Delete')
-;
