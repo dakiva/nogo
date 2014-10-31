@@ -4,14 +4,14 @@ CREATE TABLE role (
        permission_mask  int NOT NULL
 );
 
-CREATE TABLE role_members (
+CREATE TABLE role_member (
        role_id            bigint NOT NULL,
        principal_sid      text NOT NULL,
        CONSTRAINT pk_role_members PRIMARY KEY(role_id, principal_sid),
        CONSTRAINT fk_role_members_role_id FOREIGN KEY(role_id) REFERENCES role(role_id) ON DELETE CASCADE
 );
 
-CREATE INDEX ix_role_members_principal_sid ON role_members (
+CREATE INDEX ix_role_member_principal_sid ON role_member (
        principal_sid
 );
 
@@ -25,7 +25,7 @@ CREATE TABLE secure_resource (
        CONSTRAINT fk_secure_resource_owner_id FOREIGN KEY(owner_id) REFERENCES sid(sid_id)
 );
 
-CREATE TABLE acl_entry(
+CREATE TABLE acl_entry (
        id              bigserial PRIMARY KEY,
        resource_id     bigint NOT NULL,
        principal_sid   text NOT NULL,
