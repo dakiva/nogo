@@ -81,9 +81,8 @@ Collaboration
 This library is still really early in development and has not had a "locked" release yet. This is a great time to provide suggestions, ideas. Pull requests are welcome.
 
 * TODO
-  - Provide out of the box repositories for RDBMS.
-  - Support for groups. This is useful when managing ACLs. Currently principals must be added directly to ACLs.
+ - use int64 for permission mask. This is already supported in the DB.
 
 About
 =====
-This library is written by Daniel Akiva and is licensed under the apache-2.0 license. 
+This library is written by Daniel Akiva and is licensed under the apache-2.0 license.
