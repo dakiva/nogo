@@ -1,1 +1,33 @@
 box: wercker/golang
+
+services:
+  - wercker/postgresql
+
+# Build definition
+build:
+  # The steps that will be executed on build
+  steps:
+    # Sets the go workspace and places your package
+    # at the right place in the workspace tree
+    - setup-go-workspace:
+        package_dir: $WERCKER_GIT_REPOSITORY
+
+    # Gets the public dependencies
+    - script:
+        name: go get
+        code: |
+         go get -t ./...
+
+    # Build the project
+    - script:
+        name: go install
+        code: |
+          go version
+          go install ./...
+
+    # Test the project
+    - script:
+        name: go test
+        code: |
+          export POSTGRES_DSN="user=$WERCKER_POSTGRESQL_USERNAME password=$WERCKER_POSTGRESQL_PASSWORD host=$WERCKER_POSTGRESQL_HOST port=$WERCKER_POSTGRESQL_PORT dbname=$WERCKER_POSTGRESQL_DATABASE"
+          go test ./...
