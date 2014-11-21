@@ -41,7 +41,7 @@ type defaultAccessControlStrategy struct {
 }
 
 func (this *defaultAccessControlStrategy) VerifyRoleAccess(principal Principal, permission Permission) error {
-	roles, err := this.roleRepository.FindRoles(principal.GetRoleNames()...)
+	roles, err := this.findRoles(principal.GetRoleNames()...)
 	if err != nil {
 		return errors.New("Could not verify role access.")
 	}
@@ -92,7 +92,7 @@ func (this *defaultAccessControlStrategy) VerifyResourceAccessById(principal Pri
 }
 
 func (this *defaultAccessControlStrategy) isAdmin(principal Principal) bool {
-	roles, err := this.roleRepository.FindRoles(principal.GetRoleNames()...)
+	roles, err := this.findRoles(principal.GetRoleNames()...)
 	if err == nil {
 		for _, role := range roles {
 			if role.IsAdmin() {
@@ -101,6 +101,24 @@ func (this *defaultAccessControlStrategy) isAdmin(principal Principal) bool {
 		}
 	}
 	return false
+}
+
+func (this *defaultAccessControlStrategy) findRoles(roleNames ...string) ([]Role, error) {
+	roles, err := this.roleRepository.FindAll()
+	if err != nil {
+		return nil, err
+	}
+	returnRoles := make([]Role, 0)
+	// while n^2 complexity, the number of roles in a system will be relatively small
+	for _, roleName := range roleNames {
+		for _, role := range roles {
+			if roleName == role.GetName() {
+				returnRoles = append(returnRoles, role)
+				break
+			}
+		}
+	}
+	return returnRoles, nil
 }
 
 func hasPermission(sid string, permission Permission, resource SecureResource) (bool, error) {

@@ -39,29 +39,29 @@ type Role interface {
 
 // Creates a new role with a specific set of permissions
 func NewRole(name string, mask Permission) Role {
-	return &defaultRole{name: name, permissionMask: mask, isAdmin: false}
+	return &defaultRole{RoleName: name, PermissionMask: mask, Admin: false}
 }
 
 // Creates a new admin role.
 func NewAdminRole(name string, mask Permission) Role {
-	return &defaultRole{name: name, permissionMask: mask, isAdmin: true}
+	return &defaultRole{RoleName: name, PermissionMask: mask, Admin: true}
 }
 
 type defaultRole struct {
-	name           string
-	permissionMask Permission
-	isAdmin        bool
+	RoleName       string     `db:"role_name"`
+	PermissionMask Permission `db:"permission_mask"`
+	Admin          bool       `db:"is_admin"`
 }
 
 func (this *defaultRole) GetName() string {
-	return this.name
+	return this.RoleName
 }
 
 func (this *defaultRole) IsAdmin() bool {
-	return this.isAdmin
+	return this.Admin
 }
 
 func (this *defaultRole) HasPermission(permission Permission) (bool, error) {
-	val := (this.permissionMask&permission != 0)
+	val := (this.PermissionMask&permission != 0)
 	return val, nil
 }

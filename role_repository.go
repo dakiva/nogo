@@ -16,8 +16,10 @@ package nogo
 
 // A repository for managing roles.
 type RoleRepository interface {
-	// Returns roles for the given role names or an error if the roles could not be retrieved.
-	FindRoles(roleNames ...string) ([]Role, error)
+	// Finds and returns all roles managed by this repository or an error if there was an error finding roles.
+	FindAll() ([]Role, error)
+	// Returns the role for the given role name or an error if an error occurred while retrieving the role.
+	FindRole(roleName string) (Role, error)
 	// Creates a new role. Returns an error if the role could not be created, or already exists.
 	CreateRole(role Role) error
 	// Updates an existing role. Returns an error if the role could not be updated, or if the role does not exist.

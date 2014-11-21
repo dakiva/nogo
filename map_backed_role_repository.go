@@ -23,41 +23,44 @@ type mapBackedRoleRepository struct {
 	roleMap map[string]Role
 }
 
-func NewMapBackedRepository() RoleRepository {
+func NewMapBackedRoleRepository() RoleRepository {
 	return &mapBackedRoleRepository{roleMap: make(map[string]Role)}
 }
 
-func (h *mapBackedRoleRepository) FindRoles(roleNames ...string) ([]Role, error) {
+func (this *mapBackedRoleRepository) FindAll() ([]Role, error) {
 	ret := make([]Role, 0)
-	for _, name := range roleNames {
-		if role, ok := h.roleMap[name]; ok {
-			ret = append(ret, role)
-		} else {
-			return nil, errors.New(fmt.Sprintf("Could not find role %v", name))
-		}
+	for _, role := range this.roleMap {
+		ret = append(ret, role)
 	}
 	return ret, nil
 }
 
-func (h *mapBackedRoleRepository) CreateRole(role Role) error {
-	if _, ok := h.roleMap[role.GetName()]; ok {
+func (this *mapBackedRoleRepository) FindRole(roleName string) (Role, error) {
+	if role, ok := this.roleMap[roleName]; ok {
+		return role, nil
+	}
+	return nil, errors.New(fmt.Sprintf("Could not find role %v", roleName))
+}
+
+func (this *mapBackedRoleRepository) CreateRole(role Role) error {
+	if _, ok := this.roleMap[role.GetName()]; ok {
 		return errors.New(fmt.Sprintf("Error creating role. Role %v already exists", role.GetName()))
 	}
-	h.roleMap[role.GetName()] = role
+	this.roleMap[role.GetName()] = role
 	return nil
 }
 
-func (h *mapBackedRoleRepository) UpdateRole(role Role) error {
-	if _, ok := h.roleMap[role.GetName()]; ok {
-		h.roleMap[role.GetName()] = role
+func (this *mapBackedRoleRepository) UpdateRole(role Role) error {
+	if _, ok := this.roleMap[role.GetName()]; ok {
+		this.roleMap[role.GetName()] = role
 		return nil
 	}
 	return errors.New(fmt.Sprintf("Error updating role. Role %v does not exist.", role.GetName()))
 }
 
-func (h *mapBackedRoleRepository) DeleteRole(roleName string) error {
-	if _, ok := h.roleMap[roleName]; ok {
-		delete(h.roleMap, roleName)
+func (this *mapBackedRoleRepository) DeleteRole(roleName string) error {
+	if _, ok := this.roleMap[roleName]; ok {
+		delete(this.roleMap, roleName)
 	}
 	return errors.New(fmt.Sprintf("Error deleting role. Role %v does not exist.", roleName))
 }
