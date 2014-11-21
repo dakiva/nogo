@@ -22,16 +22,20 @@ import (
 )
 
 func TestVerifyRoleAccess(t *testing.T) {
+	// given
 	create := Permission(1)
 	update := Permission(2)
 	r := NewRole("testRole", create)
 	mockRoleRepo := new(mockRoleRepository)
-	mockRoleRepo.On("FindRoles", []string{"testRole"}).Return([]Role{r}, nil)
+	mockRoleRepo.On("FindAll").Return([]Role{r}, nil)
 
 	p := &mockPrincipal{roleNames: []string{"testRole"}}
 	aclService := NewAccessControlStrategy(nil, mockRoleRepo, true)
 
+	// when
 	err := aclService.VerifyRoleAccess(p, update)
+
+	// then
 	assert.NotNil(t, err)
 
 	err = aclService.VerifyRoleAccess(p, create)
@@ -39,15 +43,20 @@ func TestVerifyRoleAccess(t *testing.T) {
 }
 
 func TestVerifyAdminRoleAccess(t *testing.T) {
+	// given
 	update := Permission(2)
 	r := NewAdminRole("testAdminRole", EmptyPermissionMask)
 	mockRoleRepo := new(mockRoleRepository)
-	mockRoleRepo.On("FindRoles", []string{"testAdminRole"}).Return([]Role{r}, nil)
+	mockRoleRepo.On("FindAll").Return([]Role{r}, nil)
 	p := &mockPrincipal{roleNames: []string{"testAdminRole"}}
+
+	// when
 
 	// verify with allowAdmin on
 	aclService := NewAccessControlStrategy(nil, mockRoleRepo, true)
 	err := aclService.VerifyRoleAccess(p, update)
+
+	// then
 	assert.Nil(t, err)
 
 	// verify with allowAdmin off
@@ -57,6 +66,7 @@ func TestVerifyAdminRoleAccess(t *testing.T) {
 }
 
 func TestVerifyResourceACL(t *testing.T) {
+	// given
 	create := Permission(1)
 	update := Permission(2)
 	p := &mockPrincipal{sid: "id", roleNames: []string{}}
@@ -64,10 +74,13 @@ func TestVerifyResourceACL(t *testing.T) {
 	acl.AddACE(NewACE("id", create))
 	resource := &mockResource{nativeId: "id", acl: acl}
 	mockRoleRepo := new(mockRoleRepository)
-	mockRoleRepo.On("FindRoles", []string{}).Return([]Role{}, nil)
+	mockRoleRepo.On("FindAll").Return([]Role{}, nil)
 	aclService := NewAccessControlStrategy(nil, mockRoleRepo, true)
 
+	// when
 	err := aclService.VerifyResourceAccess(p, update, resource)
+
+	// then
 	assert.NotNil(t, err)
 
 	err = aclService.VerifyResourceAccess(p, create, resource)
@@ -78,6 +91,7 @@ func TestVerifyResourceACL(t *testing.T) {
 }
 
 func TestVerifyInheritedResourceACL(t *testing.T) {
+	// given
 	create := Permission(1)
 	update := Permission(2)
 	p := &mockPrincipal{sid: "id", roleNames: []string{}}
@@ -90,10 +104,12 @@ func TestVerifyInheritedResourceACL(t *testing.T) {
 	resource := &mockResource{nativeId: "id", acl: acl, parent: parentResource}
 	aclService := NewAccessControlStrategy(nil, nil, false)
 
+	// when
 	// verify with inherit off
 	err := aclService.VerifyResourceAccess(p, update, resource)
 	assert.NotNil(t, err)
 
+	// then
 	// verify with inherit on
 	resource.inheritACL = true
 	err = aclService.VerifyResourceAccess(p, update, resource)
@@ -104,18 +120,21 @@ func TestVerifyInheritedResourceACL(t *testing.T) {
 }
 
 func TestVerifyAdminResourceAccess(t *testing.T) {
+	// given
 	create := Permission(1)
 	r := NewAdminRole("testAdminRole", EmptyPermissionMask)
 	p := &mockPrincipal{sid: "id", roleNames: []string{"testAdminRole"}}
 	resource := &mockResource{nativeId: "id", acl: NewACL()}
 	mockRoleRepo := new(mockRoleRepository)
-	mockRoleRepo.On("FindRoles", []string{"testAdminRole"}).Return([]Role{r}, nil)
+	mockRoleRepo.On("FindAll").Return([]Role{r}, nil)
 
+	// when
 	// verify with allowAdmin on
 	aclService := NewAccessControlStrategy(nil, mockRoleRepo, true)
 	err := aclService.VerifyResourceAccess(p, create, resource)
 	assert.Nil(t, err)
 
+	// then
 	// verify with allowAdmin off
 	aclService = NewAccessControlStrategy(nil, mockRoleRepo, false)
 	err = aclService.VerifyResourceAccess(p, create, resource)
@@ -175,9 +194,14 @@ type mockRoleRepository struct {
 	mock.Mock
 }
 
-func (this *mockRoleRepository) FindRoles(roleNames ...string) ([]Role, error) {
-	args := this.Mock.Called(roleNames)
+func (this *mockRoleRepository) FindAll() ([]Role, error) {
+	args := this.Mock.Called()
 	return args.Get(0).([]Role), args.Error(1)
+}
+
+func (this *mockRoleRepository) FindRole(roleName string) (Role, error) {
+	args := this.Mock.Called(roleName)
+	return args.Get(0).(Role), args.Error(1)
 }
 
 func (this *mockRoleRepository) CreateRole(role Role) error {

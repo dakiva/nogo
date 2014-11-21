@@ -1,0 +1,22 @@
+{
+    "FindAllRoles": {
+        "query": "SELECT role_name, permission_mask, is_admin FROM role",
+        "description": "Returns all roles stored in the database."
+    },
+    "FindRole": {
+        "query": "SELECT role_name, permission_mask, is_admin FROM role WHERE role_name = :role_name",
+        "description": "Returns the role for the specified role name."
+    },
+    "InsertRole": {
+        "query": "INSERT INTO role(role_name, permission_mask, is_admin) VALUES (:role_name, :permission_mask, :is_admin)",
+        "description": "Inserts a role into the database."
+    },
+    "UpdateRole": {
+        "query": "UPDATE role SET permission_mask = :permission_mask, is_admin = :is_admin WHERE role_name = :role_name",
+        "description": "Updates a role in the database."
+    },
+    "DeleteRole": {
+        "query": "DELETE FROM role WHERE role_name = :role_name",
+        "description": "Deletes a role from the database."
+    }
+}
