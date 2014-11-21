@@ -27,8 +27,8 @@ var testdb *sqlx.DB
 var queryMap dbx.QueryMap
 
 func init() {
-	testdb = dbx.MustInitializeTestDB("migrations")
-	queryMap = dbx.MustLoadNamedQueries("queries/nogo_queries.json")
+	testdb = dbx.MustInitializeTestDB("db/migrations")
+	queryMap = dbx.MustLoadNamedQueries("db/queries/nogo_queries.json")
 }
 
 func TestRoleCreation(t *testing.T) {
