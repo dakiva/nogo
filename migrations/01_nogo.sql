@@ -13,7 +13,7 @@ CREATE UNIQUE INDEX ix_role_role_name ON role (
 
 CREATE TABLE role_member (
        role_id            bigint,
-       principal_sid      text,
+       principal_sid      text NOT NULL,
        CONSTRAINT pk_role_members PRIMARY KEY(role_id, principal_sid),
        CONSTRAINT fk_role_members_role_id FOREIGN KEY(role_id) REFERENCES role(role_id) ON DELETE CASCADE
 );
@@ -26,7 +26,7 @@ CREATE TABLE secure_resource (
        secure_resource_id        bigserial,
        native_resource_id        text NOT NULL,
        parent_secure_resource_id bigint,
-       owner_sid                 text,
+       owner_sid                 text NOT NULL,
        inherit_parent_acl        boolean NOT NULL DEFAULT true,
        CONSTRAINT pk_secure_resource PRIMARY KEY(secure_resource_id),
        CONSTRAINT fk_secure_resource_parent_secure_resource_id FOREIGN KEY(parent_secure_resource_id) REFERENCES secure_resource(secure_resource_id)
