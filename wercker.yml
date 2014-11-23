@@ -1,7 +1,7 @@
 box: wercker/golang
 
 services:
-  - wercker/postgresql
+  - garrow/postgresql9.3@0.0.13
 
 # Build definition
 build:
