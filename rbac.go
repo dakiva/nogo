@@ -37,12 +37,12 @@ type Role interface {
 	HasPermission(permission Permission) (bool, error)
 }
 
-// Creates a new role with a specific set of permissions
+// Creates a new regular role (non admin) with a specific set of permissions
 func NewRole(name string, mask Permission) Role {
 	return &defaultRole{RoleName: name, PermissionMask: mask, Admin: false}
 }
 
-// Creates a new admin role.
+// Creates a new admin role. The application may or may not automatically allow an admin every permission, so define a permission mask accordingly.
 func NewAdminRole(name string, mask Permission) Role {
 	return &defaultRole{RoleName: name, PermissionMask: mask, Admin: true}
 }
