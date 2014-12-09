@@ -15,6 +15,11 @@ To install, run:
    ```
    go get github.com/dakiva/nogo
    ```
+
+To run the tests, you'll need to connect to a Postgres database:
+
+POSTGRES_DSN="name= dbname= host= port= sslmode=" go test
+
 Functionality
 =============
 There are two types of access checks that nogo supports:
@@ -121,7 +126,7 @@ You may wish to take advantage of the optional features for securing system reso
 
 Collaboration
 =============
-This library is still really early in development and has not had a "locked" release yet. This is a great time to provide suggestions, ideas. Pull requests are welcome.
+This library is still early in development. This is a great time to provide suggestions, ideas. Pull requests are welcome.
 
 About
 =====
