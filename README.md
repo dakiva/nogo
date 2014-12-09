@@ -7,8 +7,6 @@ Overview
 --------
 Nogo provides easy to use role-based access controls for servers as well as access control lists (ACLs) support for defining access to resources.
 
-DISCLAIMER: This is a work in progress and has not yet been locked down. Expect the APIs to change until otherwise noted.
-
 Installation
 ------------
 Make sure you have a working Go environment. The core library does not have any external dependencies. To run the unit tests, however, the [testify](https://github.com/stretchr/testify) library is required.
@@ -124,10 +122,6 @@ You may wish to take advantage of the optional features for securing system reso
 Collaboration
 =============
 This library is still really early in development and has not had a "locked" release yet. This is a great time to provide suggestions, ideas. Pull requests are welcome.
-
-* TODO
-  - Provide out of the box repositories for RDBMS.
-  - Support for groups. This is useful when managing ACLs. Currently principals must be added directly to ACLs.
 
 About
 =====
