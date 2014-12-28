@@ -123,6 +123,7 @@ You may wish to take advantage of the optional features for securing system reso
 
 * In order to persist ACLs, you will also need to implement the SecureResourceRepository for loading and returning SecureResources from a database and then provide an instance of the repository when constructing the AccessControlStrategy. (Unlike the MapBackedRepository for role-based access control, there is no generic support for an ACL repository.)
 
+* Use the nogo.WorldSid to add permissions to all principals. Be careful though, adding a permission to World for a parent resource (with inherited ACLs enabled) will grant permissions to everyone in the system for all child resources.
 
 Collaboration
 =============
