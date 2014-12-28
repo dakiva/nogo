@@ -90,6 +90,31 @@ func TestVerifyResourceACL(t *testing.T) {
 	mockRoleRepo.AssertExpectations(t)
 }
 
+func TestVerifyWorldSid(t *testing.T) {
+	// given
+	create := Permission(1)
+	update := Permission(2)
+	p := &mockPrincipal{sid: "id", roleNames: []string{}}
+	acl := NewACL()
+	acl.AddACE(NewACE(WorldSid, create))
+	resource := &mockResource{nativeId: "id", acl: acl}
+	mockRoleRepo := new(mockRoleRepository)
+	mockRoleRepo.On("FindAll").Return([]Role{}, nil)
+	aclService := NewAccessControlStrategy(nil, mockRoleRepo, true)
+
+	// when
+	err := aclService.VerifyResourceAccess(p, update, resource)
+
+	// then
+	assert.NotNil(t, err)
+
+	err = aclService.VerifyResourceAccess(p, create, resource)
+	assert.Nil(t, err)
+
+	// role repo should not be interacted with when verifying ACLs for non-admins
+	mockRoleRepo.AssertExpectations(t)
+}
+
 func TestVerifyInheritedResourceACL(t *testing.T) {
 	// given
 	create := Permission(1)
@@ -98,6 +123,35 @@ func TestVerifyInheritedResourceACL(t *testing.T) {
 
 	parentACL := NewACL()
 	parentACL.AddACE(NewACE("id", update))
+	parentResource := &mockResource{nativeId: "parentId", acl: parentACL}
+	acl := NewACL()
+	acl.AddACE(NewACE("id", create))
+	resource := &mockResource{nativeId: "id", acl: acl, parent: parentResource}
+	aclService := NewAccessControlStrategy(nil, nil, false)
+
+	// when
+	// verify with inherit off
+	err := aclService.VerifyResourceAccess(p, update, resource)
+	assert.NotNil(t, err)
+
+	// then
+	// verify with inherit on
+	resource.inheritACL = true
+	err = aclService.VerifyResourceAccess(p, update, resource)
+	assert.Nil(t, err)
+
+	err = aclService.VerifyResourceAccess(p, create, resource)
+	assert.Nil(t, err)
+}
+
+func TestVerifyInheritedWorldSid(t *testing.T) {
+	// given
+	create := Permission(1)
+	update := Permission(2)
+	p := &mockPrincipal{sid: "id", roleNames: []string{}}
+
+	parentACL := NewACL()
+	parentACL.AddACE(NewACE(WorldSid, update))
 	parentResource := &mockResource{nativeId: "parentId", acl: parentACL}
 	acl := NewACL()
 	acl.AddACE(NewACE("id", create))

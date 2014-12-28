@@ -70,6 +70,8 @@ func (this *defaultAccessControlStrategy) VerifyResourceAccess(principal Princip
 	} else if err != nil {
 		return err
 	}
+	// cache the id for proper error reporting if access does not resolve.
+	resourceId := resource.GetNativeId()
 	parent := resource.GetParentResource()
 	for resource.InheritsParentACL() && parent != nil {
 		if isAuth, err := hasPermission(principal.GetSid(), permission, parent); isAuth && err == nil {
@@ -80,7 +82,7 @@ func (this *defaultAccessControlStrategy) VerifyResourceAccess(principal Princip
 		resource = parent
 		parent = resource.GetParentResource()
 	}
-	return errors.New(fmt.Sprintf("Principal %v does not have access to the resource %v.", principal.GetId(), resource.GetNativeId()))
+	return errors.New(fmt.Sprintf("Principal %v does not have access to the resource %v.", principal.GetId(), resourceId))
 }
 
 func (this *defaultAccessControlStrategy) VerifyResourceAccessById(principal Principal, permission Permission, resourceId string) error {
@@ -137,5 +139,18 @@ func hasPermission(sid string, permission Permission, resource SecureResource) (
 			return false, err
 		}
 	}
+	// test world sid
+	ace, err = acl.GetACEForSid(WorldSid)
+	if err != nil {
+		return false, err
+	}
+	if ace != nil {
+		if isAuth, err := ace.HasPermission(permission); isAuth && err == nil {
+			return true, nil
+		} else if err != nil {
+			return false, err
+		}
+	}
+
 	return false, nil
 }

@@ -21,6 +21,8 @@ import (
 
 const (
 	EmptyPermissionMask Permission = 0
+	// a security identifier representing Everyone or World
+	WorldSid = "7f38af42-6df5-4490-9b45-da7061227383"
 )
 
 // A representation of an access control list.
