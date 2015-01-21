@@ -27,7 +27,7 @@ var testdb *sqlx.DB
 var queryMap dbx.QueryMap
 
 func TestMain(m *testing.M) {
-	schema := dbx.GenerateSchemaName()
+	schema := dbx.GenerateSchemaName("nogo")
 	testdb = dbx.MustInitializeTestDB(schema, "db/migrations")
 	queryMap = dbx.MustLoadNamedQueries("db/queries/nogo_queries.json")
 	m.Run()
