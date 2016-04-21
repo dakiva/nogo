@@ -1,16 +1,16 @@
-box: wercker/golang
+box: golang:1.6
 
 services:
-  - garrow/postgresql9.3@0.0.13
+  - id: postgres:9.4
+    env:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: nogo
 
 # Build definition
 build:
   # The steps that will be executed on build
   steps:
-    # Sets the go workspace and places your package
-    # at the right place in the workspace tree
-    - setup-go-workspace:
-        package_dir: $WERCKER_GIT_REPOSITORY
+    - setup-go-workspace
 
     # Gets the public dependencies
     - script:
@@ -29,5 +29,5 @@ build:
     - script:
         name: go test
         code: |
-          export POSTGRES_DSN="user=$WERCKER_POSTGRESQL_USERNAME password=$WERCKER_POSTGRESQL_PASSWORD host=$WERCKER_POSTGRESQL_HOST port=$WERCKER_POSTGRESQL_PORT dbname=$WERCKER_POSTGRESQL_DATABASE"
+          export POSTGRES_DSN="user=nogo password=password host=$POSTGRES_PORT_5432_TCP_ADDR port=$POSTGRES_PORT_5432_TCP_PORT sslmode=disable dbname=nogo"
           go test ./...
