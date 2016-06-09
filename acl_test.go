@@ -15,6 +15,8 @@
 package nogo
 
 import (
+	"fmt"
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -107,4 +109,95 @@ func TestAuthorized(t *testing.T) {
 	isAuth, err = ace.HasPermission(create)
 	assert.True(t, isAuth)
 	assert.Nil(t, err)
+}
+
+func TestDefaultACEHasPermissionBoundaries(t *testing.T) {
+	ace := NewACE("00000000-0000-0000-0000-000000000000", Permission(1))
+	isAuth, err := ace.HasPermission(Permission(-1))
+	assert.False(t, isAuth, "should not have permissions")
+	assert.Nil(t, err, "should be no error")
+
+	ace = NewACE("00000000-0000-0000-0000-000000000000", Permission(math.MaxInt32))
+	isAuth, err = ace.HasPermission(Permission(-1))
+	assert.False(t, isAuth, "should not have permissions")
+	assert.Nil(t, err, "should be no error")
+
+	isAuth, err = ace.HasPermission(Permission(1))
+	assert.True(t, isAuth, "should have permissions")
+	assert.Nil(t, err, "should be no error")
+
+	isAuth, err = ace.HasPermission(Permission(1<<31 - 1))
+	assert.True(t, isAuth, "should have permissions")
+	assert.Nil(t, err, "should be no error")
+}
+
+func TestDefaultACEGetPermissions(t *testing.T) {
+	ace := NewACE("00000000-0000-0000-0000-000000000000", Permission(0))
+	perms := ace.GetPermissions()
+	assert.Equal(t, 0, len(perms), "should not have any permissions")
+
+	ace = NewACE("00000000-0000-0000-0000-000000000000", Permission(math.MaxInt32))
+	perms = ace.GetPermissions()
+	assert.Equal(t, 31, len(perms), "should have maximum permissions")
+}
+
+const N = 1000
+
+// TestDefaultACEConcurrentAdd tries to concurrently add
+// ACEs to the ACL. This should expose any data races when
+// accessing the internal map.
+func TestDefaultACEConcurrentAdd(t *testing.T) {
+	acl := NewACL()
+	done := make(chan struct{})
+
+	for i := 0; i < N; i++ {
+		go func(index int) {
+			perm := Permission(index)
+			ace := NewACE("id", perm)
+			acl.AddACE(ace)
+			done <- struct{}{}
+		}(i)
+	}
+
+	//drain the done channel, can substitute with a WaitGroup
+	for i := 0; i < N; i++ {
+		<-done
+	}
+
+	aces, err := acl.GetACEs()
+	assert.Nil(t, err, "there should be no error")
+	assert.Equal(t, N, len(aces), "all ACEs should be accounted for")
+}
+
+// TestDefaultACEConcurrentRemove populates an ACL and then
+// tries to concurrently remove the ACE entries. This should
+// expose any data races while accessing the internal map.
+func TestDefaultACEConcurrentRemove(t *testing.T) {
+	acl := NewACL()
+	done := make(chan struct{})
+	aces := make([]ACE, 0, N)
+
+	for i := 0; i < N; i++ {
+		perm := Permission(i)
+		ace := NewACE(fmt.Sprintf("sid-%d", i), perm)
+		aces = append(aces, ace)
+		acl.AddACE(ace)
+	}
+
+	for _, ace := range aces {
+		go func(a ACE) {
+			err := acl.RemoveACE(a)
+			assert.Nil(t, err, "ACE record should be removeable")
+			done <- struct{}{}
+		}(ace)
+	}
+
+	//drain the done channel, can substitute with a WaitGroup
+	for i := 0; i < N; i++ {
+		<-done
+	}
+
+	aces, err := acl.GetACEs()
+	assert.Nil(t, err, "there should be no error")
+	assert.Equal(t, 0, len(aces), "all ACEs should be accounted for")
 }

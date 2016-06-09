@@ -17,8 +17,11 @@ To install, run:
    ```
 
 To run the tests, you'll need to connect to a Postgres database:
+```
+export POSTGRES_DSN="user=postgres dbname=nogo host=localhost port=5432 sslmode=disable"
 
-POSTGRES_DSN="name= dbname= host= port= sslmode=" go test
+go test
+```
 
 Functionality
 =============

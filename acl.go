@@ -17,6 +17,7 @@ package nogo
 import (
 	"errors"
 	"math"
+	"sync"
 )
 
 const (
@@ -63,39 +64,48 @@ type SecureResource interface {
 
 // Creates a new access control list
 func NewACL() ACL {
-	return &defaultACL{aces: make(map[string]ACE)}
+	return &defaultACL{aces: make(map[string]ACE), lock: &sync.RWMutex{}}
 }
 
 type defaultACL struct {
+	lock *sync.RWMutex
 	aces map[string]ACE
 }
 
-func (this *defaultACL) GetACEs() ([]ACE, error) {
-	ret := make([]ACE, 0, len(this.aces))
-	for _, v := range this.aces {
+func (d *defaultACL) GetACEs() ([]ACE, error) {
+	d.lock.RLock()
+	defer d.lock.RUnlock()
+	ret := make([]ACE, 0, len(d.aces))
+	for _, v := range d.aces {
 		ret = append(ret, v)
 	}
 	return ret, nil
 }
 
-func (this *defaultACL) AddACE(ace ACE) error {
-	if _, ok := this.aces[ace.GetSid()]; ok {
+func (d *defaultACL) AddACE(ace ACE) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	if _, ok := d.aces[ace.GetSid()]; ok {
 		return errors.New("The entry already exists in this ACL.")
 	}
-	this.aces[ace.GetSid()] = ace
+	d.aces[ace.GetSid()] = ace
 	return nil
 }
 
-func (this *defaultACL) RemoveACE(ace ACE) error {
-	if _, ok := this.aces[ace.GetSid()]; ok {
-		delete(this.aces, ace.GetSid())
+func (d *defaultACL) RemoveACE(ace ACE) error {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	if _, ok := d.aces[ace.GetSid()]; ok {
+		delete(d.aces, ace.GetSid())
 		return nil
 	}
 	return errors.New("Error removing ACE.")
 }
 
-func (this *defaultACL) GetACEForSid(sid string) (ACE, error) {
-	if entry, ok := this.aces[sid]; ok {
+func (d *defaultACL) GetACEForSid(sid string) (ACE, error) {
+	d.lock.RLock()
+	defer d.lock.RUnlock()
+	if entry, ok := d.aces[sid]; ok {
 		return entry, nil
 	}
 	return nil, nil
