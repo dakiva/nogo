@@ -1,7 +1,7 @@
-box: golang:1.6
+box: golang:1.7
 
 services:
-  - id: postgres:9.4
+  - id: postgres:9.5
     env:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: nogo
